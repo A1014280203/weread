@@ -48,7 +48,7 @@ class WeRead(object):
     qrcode_path = "image's filename"
     wx_code = "exchange for token"
     token = {'vid': 1731234, 'accessToken': '', 'refreshToken': '', 'skey': '', 'openId': '',
-             'user': {'name': '', 'avatar': ''}, 'firstLogin': 0, 'userAgreement': 1}
+             'user': {'name': '', 'avatar': ''}, 'firstLogin': 0, 'userAgreement': 1, "from": "int, timestamp of token"}
 
     @classmethod
     def get_signature(cls):
@@ -113,6 +113,7 @@ class WeRead(object):
         }
         resp = requests.post(cls.TOKEN_URL, json=data, headers=cls.weread_headers)
         cls.token = resp.json()
+        cls.token["from"] = int(time.time())
 
     @classmethod
     def refresh_token(cls, ref="/pay/memberCardSummary"):
@@ -131,9 +132,46 @@ class WeRead(object):
 
         resp = requests.post(cls.REFRESH_TOKEN_URL, json=data, headers=cls.weread_headers)
         cls.token["accessToken"] = resp.json()["accessToken"]
+        cls.token["from"] = int(time.time())
         cls.token["skey"] = resp.json()["skey"]
 
-    def get_articles(self, share_url):
+    def __init__(self, share_url):
+        self.articles = {}
+        self.book_id = ""
+        self.share_url = share_url
+        self.success = self.__is_article_available()
+
+    @property
+    def review_id(self):
+        """
+        Not support setting operation, just for a peek
+        :return: str
+        """
+        if self.book_id:
+            return self.book_id + "_" + self.share_url.split("_")[-1]
+
+    def set_share_url(self, share_url):
+        self.share_url = share_url
+        self.success = self.__is_article_available()
+
+    def update_articles(self):
+        """
+        Supposed to call this method rather than get_articles, if don't need return articles meantime.
+        If post pointed by share url is invalid, method:get_articles won't fetch the articles with None returned.
+        """
+        self.get_articles()
+
+    def get_articles(self):
+        """
+        ! user auth info needed
+        Get 10, as count set, articles of the mp, which posted the share article.
+        - accessToken will be updated every 1.5h by method:refresh_auth
+        - normal http headers extended with user auth info
+        :return:
+        """
+        if not self.success:
+            return None
+        self.__refresh_auth()
         headers_add = {
             "accessToken": self.token["accessToken"],
             "vid": "1731234"
@@ -141,7 +179,7 @@ class WeRead(object):
         headers = self.weread_headers.copy()
         headers.update(headers_add)
         params = {
-            "bookId": self.get_book_id(share_url),
+            "bookId": self.book_id or self.__get_book_id(),
             "count": 10,
             "createTime": 1565011808,
             "synckey": int(time.time()),
@@ -152,14 +190,44 @@ class WeRead(object):
         self.articles = resp.json()
         return self.articles
 
-    def get_book_id(self, share_url):
-        if not self.is_article_available(share_url):
-            return
-        review_id = self.get_review_id(share_url)
+    def __is_article_available(self):
+        """
+        query the state(accessible, illegal and inaccessible(deleted)) of the post
+        :return: False for share_url invalid
+        """
+        resp = requests.get(self.share_url, headers=self.wemp_headers)
+        if resp.cookies.get("wxtokenkey", None) is not None:
+            if resp.cookies.get("LogicRet") != "0":
+                return True
+        return False
+
+    def __refresh_auth(self):
+        """
+        check accessToken first
+        :return:
+        """
+        if self.token["from"] + 1.5*3600 > int(time.time()) - 120:
+            if self.__sign["timestamp"] + self.__sign["expires_in"] > int(time.time()) - 120:
+                self.get_signature()
+            self.refresh_token()
+
+    def __get_book_id(self):
+        """
+        Get book id from review id
+        - check post state first
+        :return: None for article illegal or inaccessible(deleted)
+        """
+        review_id = self.__get_review_id()
         book_id = '_'.join(review_id.split('_')[:-1])
+        self.book_id = book_id
         return book_id
 
-    def get_review_id(self, share_url) -> str:
+    def __get_review_id(self) -> str:
+        """
+        ! user auth info needed
+        :return: str
+        """
+        self.__refresh_auth()
         headers_add = {
             "accessToken": self.token["accessToken"],
             "vid": "1731234"
@@ -167,17 +235,11 @@ class WeRead(object):
         headers = self.weread_headers.copy()
         headers.update(headers_add)
         data = {"account": "", "isDelete": 0, "reviewId": "", "thumbUrl": "", "title": "",
-                "url": share_url
+                "url": self.share_url
                 }
         resp = requests.post(self.REVIEWID_URL, json=data, headers=headers)
         return resp.json()["reviewId"]
 
-    def is_article_available(self, share_url):
-        resp = requests.get(share_url, headers=self.wemp_headers)
-        if resp.cookies.get("wxtokenkey", None) is not None:
-            if resp.cookies.get("LogicRet") != "0":
-                return True
-        return False
 
-# todo: make a decorator for checking and updating signature
-# todo: make a decorator for update accessToken
+# todo: integrate authorization process
+# todo: add database interface
