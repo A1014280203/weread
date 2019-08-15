@@ -69,10 +69,10 @@ class WeRead(object):
         }
         resp = requests.get(cls.QRCONNECT_URL, params, headers=cls.weopen_headers)
         cls.__uuid = resp.json()["uuid"]
-        cls.qrcode_path = cls.parse_qrcode(resp.json()["qrcode"]["qrcodebase64"])
+        cls.qrcode_path = cls.__parse_qrcode(resp.json()["qrcode"]["qrcodebase64"])
     
     @staticmethod
-    def parse_qrcode(qrcode_base64):
+    def __parse_qrcode(qrcode_base64):
         b = base64.standard_b64decode(qrcode_base64)
         filename = "qrcode_{0}.jpg".format(int(time.time()))
         with open(filename, "wb") as fw:
@@ -86,18 +86,15 @@ class WeRead(object):
             "uuid": cls.__uuid,
         }
         resp = requests.get(cls.LONG_QRCONNECT_URL, params, headers=cls.weopen_headers)
-        print(resp.json())
         if not resp.json()["wx_code"]:
             time.sleep(0.5)
             params["last"] = 404
             resp = requests.get(cls.LONG_QRCONNECT_URL, params, headers=cls.weopen_headers)
-            print(resp.json())
             if not resp.json()["wx_code"]:
                 time.sleep(0.5)
                 params["last"] = 404
                 # supposed to success here
                 resp = requests.get(cls.LONG_QRCONNECT_URL, params, headers=cls.weopen_headers)
-                print(resp.json())
         cls.wx_code = resp.json()["wx_code"]
     
     @classmethod
@@ -116,7 +113,7 @@ class WeRead(object):
         cls.token["from"] = int(time.time())
 
     @classmethod
-    def refresh_token(cls, ref="/pay/memberCardSummary"):
+    def __refresh_token(cls, ref="/pay/memberCardSummary"):
         data = {
             "deviceId": cls.deviceId,
             "inBackground": 0,
@@ -124,7 +121,7 @@ class WeRead(object):
             "random": 46,
             "refCgi": ref,
             "refreshToken": cls.token["refreshToken"],
-            "signature": cls.__sign["signature"],  # 只需要重新请求签名
+            "signature": cls.__sign["signature"],
             "timestamp": cls.__sign["timestamp"],
             "trackId": "",
             "wxToken": 0
@@ -209,7 +206,7 @@ class WeRead(object):
         if self.token["from"] + 1.5*3600 > int(time.time()) - 120:
             if self.__sign["timestamp"] + self.__sign["expires_in"] > int(time.time()) - 120:
                 self.get_signature()
-            self.refresh_token()
+            self.__refresh_token()
 
     def __get_book_id(self):
         """
