@@ -1,23 +1,10 @@
 import requests
-from requests.exceptions import HTTPError
-import urllib.parse as urlparse
 import base64
 import time
-from PIL import Image
-
-
-class StateError(HTTPError):
-    pass
-
-
-class AuthError(HTTPError):
-
-    def __init__(self, resp):
-        super().__init__(resp)
-        self.response = resp
 
 
 class WeRead(object):
+    
     SIGNATURE_URL = "https://i.weread.qq.com/wxticket"
     QRCONNECT_URL = "https://open.weixin.qq.com/connect/sdk/qrconnect"
     LONG_QRCONNECT_URL = "https://long.open.weixin.qq.com/connect/l/qrconnect"
@@ -51,88 +38,100 @@ class WeRead(object):
         "User-Agent": "okhttp/3.12.1"
     }
 
-    def __init__(self):
-        self.nonceStr = "weread"
-        self.appid = "wxab9b71ad2b90ff34"
-        self.deviceId = "3337192264877969242486422277"
-        self.mailDeviceId = "3577139267462447713926746244"
-        self.scope = "snsapi_userinfo,snsapi_timeline,snsapi_friend"
-        self.__sign = {"signature": "", "timestamp": 0, "expires_in": 0}
-        self.__uuid = ""
-        self.qrcode_path = "image's filename"
-        self.wx_code = "exchange for token"
-        self.token = {}
-        self.articles = {}
+    nonceStr = "weread"
+    appid = "wxab9b71ad2b90ff34"
+    deviceId = "3337192264877969242486422277"
+    mailDeviceId = "3577139267462447713926746244"
+    scope = "snsapi_userinfo,snsapi_timeline,snsapi_friend"
+    __sign = {"signature": "", "timestamp": 0, "expires_in": 0}
+    __uuid = ""
+    qrcode_path = "image's filename"
+    wx_code = "exchange for token"
+    token = {'vid': 1731234, 'accessToken': '', 'refreshToken': '', 'skey': '', 'openId': '',
+             'user': {'name': '', 'avatar': ''}, 'firstLogin': 0, 'userAgreement': 1}
 
-    def get_signature(self):
-        params = {"nonceStr": self.nonceStr}
-        resp = requests.get(self.SIGNATURE_URL, params, headers=self.weread_headers)
-        self.__sign["signature"] = resp.json()["signature"]
-        self.__sign["timestamp"] = resp.json()["timeStamp"]
-        self.__sign["expires_in"] = resp.json()["expires_in"]
+    @classmethod
+    def get_signature(cls):
+        params = {"nonceStr": cls.nonceStr}
+        resp = requests.get(cls.SIGNATURE_URL, params, headers=cls.weread_headers)
+        cls.__sign["signature"] = resp.json()["signature"]
+        cls.__sign["timestamp"] = resp.json()["timeStamp"]
+        cls.__sign["expires_in"] = resp.json()["expires_in"]
 
-    def get_uuid_and_qrcode(self):
+    @classmethod
+    def get_uuid_and_qrcode(cls):
         params = {
-            "appid": self.appid,
-            "noncestr": self.nonceStr,
-            "timestamp": self.__sign["timestamp"],
-            "scope": self.scope,
-            "signature": self.__sign["signature"]
+            "appid": cls.appid,
+            "noncestr": cls.nonceStr,
+            "timestamp": cls.__sign["timestamp"],
+            "scope": cls.scope,
+            "signature": cls.__sign["signature"]
         }
-        resp = requests.get(self.QRCONNECT_URL, params, headers=self.weopen_headers)
-        self.__uuid = resp.json()["uuid"]
-        self.qrcode_path = self.parse_qrcode(resp.json()["qrcode"]["qrcodebase64"])
-
-    def get_wxcode(self):
+        resp = requests.get(cls.QRCONNECT_URL, params, headers=cls.weopen_headers)
+        cls.__uuid = resp.json()["uuid"]
+        cls.qrcode_path = cls.parse_qrcode(resp.json()["qrcode"]["qrcodebase64"])
+    
+    @staticmethod
+    def parse_qrcode(qrcode_base64):
+        b = base64.standard_b64decode(qrcode_base64)
+        filename = "qrcode_{0}.jpg".format(int(time.time()))
+        with open(filename, "wb") as fw:
+            fw.write(b)
+        return filename
+    
+    @classmethod
+    def get_wxcode(cls):
         params = {
             "f": "json",
-            "uuid": self.__uuid,
+            "uuid": cls.__uuid,
         }
-        resp = requests.get(self.LONG_QRCONNECT_URL, params, headers=self.weopen_headers)
+        resp = requests.get(cls.LONG_QRCONNECT_URL, params, headers=cls.weopen_headers)
         print(resp.json())
         if not resp.json()["wx_code"]:
             time.sleep(0.5)
             params["last"] = 404
-            resp = requests.get(self.LONG_QRCONNECT_URL, params, headers=self.weopen_headers)
+            resp = requests.get(cls.LONG_QRCONNECT_URL, params, headers=cls.weopen_headers)
             print(resp.json())
             if not resp.json()["wx_code"]:
                 time.sleep(0.5)
                 params["last"] = 404
                 # supposed to success here
-                resp = requests.get(self.LONG_QRCONNECT_URL, params, headers=self.weopen_headers)
+                resp = requests.get(cls.LONG_QRCONNECT_URL, params, headers=cls.weopen_headers)
                 print(resp.json())
-        self.wx_code = resp.json()["wx_code"]
-
-    def get_token(self):
+        cls.wx_code = resp.json()["wx_code"]
+    
+    @classmethod
+    def get_token(cls):
         data = {
-            "code": self.wx_code,
-            "deviceId": self.deviceId,
-            "mailDeviceId": self.mailDeviceId,
+            "code": cls.wx_code,
+            "deviceId": cls.deviceId,
+            "mailDeviceId": cls.mailDeviceId,
             "random": 937,
-            "signature": self.__sign["signature"],
-            "timestamp": self.__sign["timestamp"],
+            "signature": cls.__sign["signature"],
+            "timestamp": cls.__sign["timestamp"],
             "trackId": ""
         }
-        resp = requests.post(self.TOKEN_URL, json=data, headers=self.weread_headers)
-        self.token = resp.json()
+        resp = requests.post(cls.TOKEN_URL, json=data, headers=cls.weread_headers)
+        cls.token = resp.json()
 
-    def refresh_token(self, ref="/pay/memberCardSummary"):
+    @classmethod
+    def refresh_token(cls, ref="/pay/memberCardSummary"):
         data = {
-            "deviceId": self.deviceId,
+            "deviceId": cls.deviceId,
             "inBackground": 0,
             "kickType": 1,
             "random": 46,
             "refCgi": ref,
-            "refreshToken": self.token["refreshToken"],
-            "signature": self.__sign["signature"],  # 只需要重新请求签名
-            "timestamp": self.__sign["timestamp"],
+            "refreshToken": cls.token["refreshToken"],
+            "signature": cls.__sign["signature"],  # 只需要重新请求签名
+            "timestamp": cls.__sign["timestamp"],
             "trackId": "",
             "wxToken": 0
         }
 
-        resp = requests.post(self.REFRESH_TOKEN_URL, json=data, headers=self.weread_headers)
-        self.token["accessToken"] = resp.json()["accessToken"]
-        self.token["skey"] = resp.json()["skey"]
+        resp = requests.post(cls.REFRESH_TOKEN_URL, json=data, headers=cls.weread_headers)
+        cls.token["accessToken"] = resp.json()["accessToken"]
+        cls.token["skey"] = resp.json()["skey"]
 
     def get_articles(self, share_url):
         headers_add = {
@@ -180,30 +179,5 @@ class WeRead(object):
                 return True
         return False
 
-    def parse_qrcode(self, qrcode_base64):
-        b = base64.standard_b64decode(qrcode_base64)
-        filename = "qrcode_{0}.jpg".format(int(time.time()))
-        with open(filename, "wb") as fw:
-            fw.write(b)
-        return filename
-
-    def parse_url_host(self, url):
-        return urlparse.urlparse(url)[1]
-
-
-# todo: update properties about user authentication as class-property
-# todo: use one instance to process one mp and keep infos of it
-# todo: consider initializing instance from database as well as committing itself to database
-
-if __name__ == "__main__":
-    # w = WeRead()
-    # w.get_signature()
-    # time.sleep(0.2)
-    # w.get_uuid_and_qrcode()
-    # input("Press to continue")
-    # w.get_wxcode()
-    # time.sleep(0.5)
-    # w.get_token()
-    # print(w.token)
-    w = WeRead()
-    w.get_book_id("https://mp.weixin.qq.com/s/glP9GhITiResIC86FmAWEQ")
+# todo: make a decorator for checking and updating signature
+# todo: make a decorator for update accessToken
