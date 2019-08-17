@@ -1,9 +1,9 @@
-from sqlalchemy import Column, String, create_engine, TIMESTAMP
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, String, create_engine, TIMESTAMP, Integer
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 Base = declarative_base()
-engine = create_engine('mysql+mysqlconnector://root:password@localhost:3306/test')
+engine = create_engine("mysql+pymysql://root:password@node:port/database?charset=utf8")
 DBSession = sessionmaker(bind=engine)
 
 
@@ -12,11 +12,13 @@ class Post(Base):
     __tablename__ = "post"
 
     # post info
+    pid = Column(Integer(), autoincrement=True)
     originalId = Column(String(128), primary_key=True)
     createTime = Column(TIMESTAMP())
     doc_url = Column(String(256))
     title = Column(String(128))
     content = Column(String(256))
+    state = Column(Integer(), default=0)
     # mp info
     mp_name = Column(String(64))
     avatar = Column(String(256))
@@ -50,7 +52,11 @@ class Post(Base):
             self.__s.add(Post(**data))
 
     def commit(self):
-        self.__s.commit()
+        try:
+            self.__s.commit()
+        except Exception:
+            return False
+        return True
 
     def __pre_check(self, data: dict):
         """
@@ -68,8 +74,10 @@ class Book(Base):
 
     __tablename__ = "book"
 
+    bid = Column(Integer(), autoincrement=True)
     bookId = Column(String(128), primary_key=True)
     share_url = Column(String(256))
+    state = Column(Integer(), default=0)
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
@@ -108,8 +116,15 @@ class Book(Base):
         """
         pass
 
-    def query(self):
-        raise NotImplementedError("to do")
+    def query_all(self):
+        return self.__s.query(Book).all()
 
-
-# todo: implement DB query
+    def query_all_json(self):
+        rows = self.query_all()
+        mps = list()
+        for row in rows:
+            _mp = dict()
+            _mp["bookId"] = row.bookId
+            _mp["share_url"] = row.share_url
+            mps.append(_mp)
+        return mps

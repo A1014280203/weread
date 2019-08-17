@@ -1,6 +1,7 @@
 import requests
 import base64
 import time
+import json
 
 
 class WeRead(object):
@@ -43,32 +44,32 @@ class WeRead(object):
     deviceId = "3337192264877969242486422277"
     mailDeviceId = "3577139267462447713926746244"
     scope = "snsapi_userinfo,snsapi_timeline,snsapi_friend"
-    __sign = {"signature": "", "timestamp": 0, "expires_in": 0}
-    __uuid = ""
     qrcode_path = "image's filename"
+    sign = {"signature": "", "timestamp": 0, "expires_in": 0}
+    uuid = ""
     wx_code = "exchange for token"
-    token = {'vid': 1731234, 'accessToken': '', 'refreshToken': '', 'skey': '', 'openId': '',
-             'user': {'name': '', 'avatar': ''}, 'firstLogin': 0, 'userAgreement': 1, "from": "int, timestamp of token"}
+    token = {"vid": 1731234, "accessToken": "", "refreshToken": "", "skey": "", "openId": "",
+             "user": {"name": "", "avatar": ""}, "firstLogin": 0, "userAgreement": 1, "from": "int, timestamp of token"}
 
     @classmethod
     def get_signature(cls):
         params = {"nonceStr": cls.nonceStr}
         resp = requests.get(cls.SIGNATURE_URL, params, headers=cls.weread_headers)
-        cls.__sign["signature"] = resp.json()["signature"]
-        cls.__sign["timestamp"] = resp.json()["timeStamp"]
-        cls.__sign["expires_in"] = resp.json()["expires_in"]
+        cls.sign["signature"] = resp.json()["signature"]
+        cls.sign["timestamp"] = resp.json()["timeStamp"]
+        cls.sign["expires_in"] = resp.json()["expires_in"]
 
     @classmethod
     def get_uuid_and_qrcode(cls):
         params = {
             "appid": cls.appid,
             "noncestr": cls.nonceStr,
-            "timestamp": cls.__sign["timestamp"],
+            "timestamp": cls.sign["timestamp"],
             "scope": cls.scope,
-            "signature": cls.__sign["signature"]
+            "signature": cls.sign["signature"]
         }
         resp = requests.get(cls.QRCONNECT_URL, params, headers=cls.weopen_headers)
-        cls.__uuid = resp.json()["uuid"]
+        cls.uuid = resp.json()["uuid"]
         cls.qrcode_path = cls.__parse_qrcode(resp.json()["qrcode"]["qrcodebase64"])
     
     @staticmethod
@@ -83,7 +84,7 @@ class WeRead(object):
     def get_wxcode(cls):
         params = {
             "f": "json",
-            "uuid": cls.__uuid,
+            "uuid": cls.uuid,
         }
         resp = requests.get(cls.LONG_QRCONNECT_URL, params, headers=cls.weopen_headers)
         if not resp.json()["wx_code"]:
@@ -104,8 +105,8 @@ class WeRead(object):
             "deviceId": cls.deviceId,
             "mailDeviceId": cls.mailDeviceId,
             "random": 937,
-            "signature": cls.__sign["signature"],
-            "timestamp": cls.__sign["timestamp"],
+            "signature": cls.sign["signature"],
+            "timestamp": cls.sign["timestamp"],
             "trackId": ""
         }
         resp = requests.post(cls.TOKEN_URL, json=data, headers=cls.weread_headers)
@@ -121,8 +122,8 @@ class WeRead(object):
             "random": 46,
             "refCgi": ref,
             "refreshToken": cls.token["refreshToken"],
-            "signature": cls.__sign["signature"],
-            "timestamp": cls.__sign["timestamp"],
+            "signature": cls.sign["signature"],
+            "timestamp": cls.sign["timestamp"],
             "trackId": "",
             "wxToken": 0
         }
@@ -131,6 +132,26 @@ class WeRead(object):
         cls.token["accessToken"] = resp.json()["accessToken"]
         cls.token["from"] = int(time.time())
         cls.token["skey"] = resp.json()["skey"]
+
+    @classmethod
+    def save(cls, path="./WeRead.json"):
+        data = {
+            "sign": cls.sign,
+            "uuid": cls.uuid,
+            "wx_code": cls.wx_code,
+            "token": cls.token
+        }
+        with open(path, "wb") as fw:
+            json.dump(data, fw)
+
+    @classmethod
+    def load(cls, path="./WeRead.json"):
+        with open(path, "rb") as fr:
+            data = json.load(fr)
+            cls.sign = data["sign"]
+            cls.uuid = data["uuid"]
+            cls.wx_code = data["wx_code"]
+            cls.token = data["token"]
 
     def __init__(self, share_url="", bookId=""):
         self.articles = {}
@@ -207,7 +228,7 @@ class WeRead(object):
         :return:
         """
         if self.token["from"] + 1.5*3600 > int(time.time()) - 120:
-            if self.__sign["timestamp"] + self.__sign["expires_in"] > int(time.time()) - 120:
+            if self.sign["timestamp"] + self.sign["expires_in"] > int(time.time()) - 120:
                 self.get_signature()
             self.__refresh_token()
 
@@ -218,7 +239,7 @@ class WeRead(object):
         :return: None for article illegal or inaccessible(deleted)
         """
         review_id = self.__get_review_id()
-        book_id = '_'.join(review_id.split('_')[:-1])
+        book_id = "_".join(review_id.split("_")[:-1])
         self.book_id = book_id
         return book_id
 
