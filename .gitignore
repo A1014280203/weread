@@ -108,5 +108,4 @@ venv.bak/
 *.conf
 *.txt
 *.htp
-*.xml
-*.iml
+.idea/
