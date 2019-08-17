@@ -2,8 +2,9 @@ from sqlalchemy import Column, String, create_engine, TIMESTAMP, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+
 Base = declarative_base()
-engine = create_engine("mysql+pymysql://root:password@node:port/database?charset=utf8")
+engine = create_engine("mysql+pymysql://root:AbLvx5gOcUw02BG@49.235.9.27:3306/weread?charset=utf8")
 DBSession = sessionmaker(bind=engine)
 
 
@@ -28,10 +29,6 @@ class Post(Base):
         super().__init__(self, *args, **kwargs)
         self.__s = None
         self.refresh_session()
-
-    def __del__(self):
-        if self.__s:
-            self.close_session()
 
     def refresh_session(self):
         self.__s = DBSession()
@@ -84,10 +81,6 @@ class Book(Base):
         self.__s = None
         self.refresh_session()
 
-    def __del__(self):
-        if self.__s:
-            self.close_session()
-
     def refresh_session(self):
         self.__s = DBSession()
 
@@ -128,3 +121,7 @@ class Book(Base):
             _mp["share_url"] = row.share_url
             mps.append(_mp)
         return mps
+
+
+# if __name__ == '__main__':
+#     Base.metadata.create_all(engine)
