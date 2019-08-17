@@ -132,9 +132,9 @@ class WeRead(object):
         cls.token["from"] = int(time.time())
         cls.token["skey"] = resp.json()["skey"]
 
-    def __init__(self, share_url):
+    def __init__(self, share_url="", bookId=""):
         self.articles = {}
-        self.book_id = ""
+        self.book_id = bookId
         self.share_url = share_url
         self.success = self.__is_article_available()
 
@@ -166,7 +166,7 @@ class WeRead(object):
         - normal http headers extended with user auth info
         :return:
         """
-        if not self.success:
+        if not self.success or not self.book_id:
             return None
         self.__refresh_auth()
         headers_add = {
@@ -192,10 +192,13 @@ class WeRead(object):
         query the state(accessible, illegal and inaccessible(deleted)) of the post
         :return: False for share_url invalid
         """
-        resp = requests.get(self.share_url, headers=self.wemp_headers)
-        if resp.cookies.get("wxtokenkey", None) is not None:
-            if resp.cookies.get("LogicRet") != "0":
-                return True
+        if self.book_id:
+            return True
+        if self.share_url:
+            resp = requests.get(self.share_url, headers=self.wemp_headers)
+            if resp.cookies.get("wxtokenkey", None) is not None:
+                if resp.cookies.get("LogicRet") != "0":
+                    return True
         return False
 
     def __refresh_auth(self):
@@ -237,6 +240,21 @@ class WeRead(object):
         resp = requests.post(self.REVIEWID_URL, json=data, headers=headers)
         return resp.json()["reviewId"]
 
+    def dump_articles(self):
+        reviews = self.articles["reviews"]
+        _posts = list()
+        for r in reviews:
+            _p = dict()
+            _p["createTime"] = r["review"]["createTime"]
+            _p["bookId"] = r["review"]["belongBookId"]
+            _p["originalId"] = r["review"]["mpInfo"]["originalId"]
+            _p["doc_url"] = r["review"]["mpInfo"]["doc_url"]
+            _p["title"] = r["review"]["mpInfo"]["title"]
+            _p["content"] = r["review"]["mpInfo"]["content"]
+            _p["avatar"] = r["review"]["mpInfo"]["avatar"]
+            _p["mp_name"] = r["review"]["mpInfo"]["mp_name"]
+            _posts.append(_p)
+        return _posts
 
-# todo: integrate authorization process
-# todo: add database interface
+    def dump_book(self):
+        return {"bookId": self.book_id, "share_url": self.share_url}
