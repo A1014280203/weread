@@ -1,7 +1,9 @@
 import time
-from weread import WeRead
-from model import Post, Book
+
 import cv2
+
+from model import Post, Book
+from weread import WeRead
 
 
 # 授权完成
@@ -67,3 +69,4 @@ if __name__ == "__main__":
 
 # todo: update mps by bid
 # todo: unbound model and db control
+# todo: use check-points to calculate time to release memory
