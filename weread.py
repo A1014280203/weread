@@ -1,7 +1,8 @@
-import requests
 import base64
-import time
 import json
+import time
+
+import requests
 
 
 class WeRead(object):
@@ -153,8 +154,9 @@ class WeRead(object):
             cls.wx_code = data["wx_code"]
             cls.token = data["token"]
 
-    def __init__(self, share_url="", bookId=""):
+    def __init__(self, share_url="", bookId="", last_update=0):
         self.articles = {}
+        self.last_update = last_update
         self.book_id = bookId
         self.share_url = share_url
         self.success = self.__is_article_available()
@@ -261,11 +263,13 @@ class WeRead(object):
         resp = requests.post(self.REVIEWID_URL, json=data, headers=headers)
         return resp.json()["reviewId"]
 
-    def dump_articles(self):
+    def dump_articles(self) -> [dict, ]:
         reviews = self.articles["reviews"]
         _posts = list()
         for r in reviews:
             _p = dict()
+            if r["review"]["createTime"] <= self.last_update:
+                break
             _p["createTime"] = r["review"]["createTime"]
             _p["bookId"] = r["review"]["belongBookId"]
             _p["originalId"] = r["review"]["mpInfo"]["originalId"]
@@ -275,7 +279,8 @@ class WeRead(object):
             _p["avatar"] = r["review"]["mpInfo"]["avatar"]
             _p["mp_name"] = r["review"]["mpInfo"]["mp_name"]
             _posts.append(_p)
+        self.last_update = reviews[0]["review"]["createTime"]
         return _posts
 
-    def dump_book(self):
-        return {"bookId": self.book_id, "share_url": self.share_url}
+    def dump_book(self) -> dict:
+        return {"bookId": self.book_id, "share_url": self.share_url, "last_update": self.last_update}
