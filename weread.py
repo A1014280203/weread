@@ -189,7 +189,7 @@ class WeRead(object):
         - normal http headers extended with user auth info
         :return:
         """
-        if not self.success or not self.book_id:
+        if not self.success:
             return None
         self.__refresh_auth()
         headers_add = {

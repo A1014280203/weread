@@ -23,17 +23,21 @@ def authorization():
     else:
         WeRead.get_signature()
         WeRead.get_uuid_and_qrcode()
-        wait_for_scanning(WeRead.qrcode_path)
+        wait_for_scanning_cmd(WeRead.qrcode_path)
         WeRead.get_wxcode()
         WeRead.get_token()
         WeRead.save()
 
 
-def wait_for_scanning(filename):
+def wait_for_scanning_gui(filename):
     img = cv2.imread(filename)
     cv2.imshow("QR", img)
     cv2.waitKey()
     cv2.destroyAllWindows()
+
+
+def wait_for_scanning_cmd(filename):
+    input(f"Please quickly: {filename}")
 
 
 def get_mps():
