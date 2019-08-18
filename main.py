@@ -65,9 +65,10 @@ def update_by_mp(mps: [WeRead, ]):
 
 def work_on(check_points: [int, ], mps):
     while True:
+        print("check time", time.ctime())
         if time.localtime().tm_hour in check_points:
             update_by_mp(mps)
-        wait_for(60*10)
+        wait_for(60)
 
 
 def update_slightly():

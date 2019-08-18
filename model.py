@@ -34,7 +34,7 @@ class Book(Base):
     bookId = Column(String(128), primary_key=True)
     share_url = Column(String(256))
     state = Column(Integer(), default=0)
-    last_update = Column(TIMESTAMP())
+    last_update = Column(TIMESTAMP(), default=0)
 
 
 class DBC(object):

@@ -154,8 +154,10 @@ class WeRead(object):
             cls.wx_code = data["wx_code"]
             cls.token = data["token"]
 
-    def __init__(self, share_url="", bookId="", last_update=0):
+    def __init__(self, bid, state, share_url="", bookId="", last_update=0):
         self.articles = {}
+        self.bid = bid
+        self.state = state
         self.last_update = last_update
         self.book_id = bookId
         self.share_url = share_url
