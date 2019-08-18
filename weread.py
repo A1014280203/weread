@@ -142,12 +142,12 @@ class WeRead(object):
             "wx_code": cls.wx_code,
             "token": cls.token
         }
-        with open(path, "wb") as fw:
+        with open(path, "w", encoding="utf-8") as fw:
             json.dump(data, fw)
 
     @classmethod
     def load(cls, path="./WeRead.json"):
-        with open(path, "rb") as fr:
+        with open(path, "r", encoding="utf-8") as fr:
             data = json.load(fr)
             cls.sign = data["sign"]
             cls.uuid = data["uuid"]
