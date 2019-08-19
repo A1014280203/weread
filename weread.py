@@ -135,6 +135,16 @@ class WeRead(object):
         cls.token["skey"] = resp.json()["skey"]
 
     @classmethod
+    def refresh_login(cls):
+        """
+        check accessToken first
+        :return:
+        """
+        if cls.sign["timestamp"] + cls.sign["expires_in"] > int(time.time()) - 60:
+            cls.get_signature()
+        cls.__refresh_token()
+
+    @classmethod
     def save(cls, path="./WeRead.json"):
         data = {
             "sign": cls.sign,
@@ -162,6 +172,7 @@ class WeRead(object):
         self.book_id = bookId
         self.share_url = share_url
         self.success = self.__is_article_available()
+        print(f"{bid}-{bookId}: {share_url} init")
 
     @property
     def review_id(self):
@@ -193,7 +204,6 @@ class WeRead(object):
         """
         if not self.success:
             return None
-        self.__refresh_auth()
         headers_add = {
             "accessToken": self.token["accessToken"],
             "vid": "1731234"
@@ -226,16 +236,6 @@ class WeRead(object):
                     return True
         return False
 
-    def __refresh_auth(self):
-        """
-        check accessToken first
-        :return:
-        """
-        if self.token["from"] + self.sign["expires_in"] > int(time.time()) - 60:
-            if self.sign["timestamp"] + self.sign["expires_in"] > int(time.time()) - 60:
-                self.get_signature()
-            self.__refresh_token()
-
     def __get_book_id(self):
         """
         Get book id from review id
@@ -252,7 +252,6 @@ class WeRead(object):
         ! user auth info needed
         :return: str
         """
-        self.__refresh_auth()
         headers_add = {
             "accessToken": self.token["accessToken"],
             "vid": "1731234"
@@ -266,6 +265,7 @@ class WeRead(object):
         return resp.json()["reviewId"]
 
     def dump_articles(self) -> [dict, ]:
+        print(self.articles)
         reviews = self.articles["reviews"]
         _posts = list()
         for r in reviews:
@@ -285,4 +285,5 @@ class WeRead(object):
         return _posts
 
     def dump_book(self) -> dict:
-        return {"bookId": self.book_id, "share_url": self.share_url, "last_update": self.last_update}
+        return {"bookId": self.book_id, "share_url": self.share_url,
+                "last_update": self.last_update, "bid": self.bid}

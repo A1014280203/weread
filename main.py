@@ -55,11 +55,12 @@ def wait_for(minutes: float):
 
 def update_by_mps(mps: [WeRead, ]):
     dbc = DBC()
+    WeRead.refresh_login()
     for mp in mps:
         mp.update_articles()
         [dbc.add(Post(**a)) for a in mp.dump_articles()]
         dbc.commit()
-        dbc.update_now(Book, "bookId", mp.dump_book())
+        dbc.update_now(Book, "bid", mp.dump_book())
         wait_for(3)
     dbc.close_session()
 
@@ -87,4 +88,4 @@ def work_on(check_points: [int, ], mps):
 if __name__ == "__main__":
     authorization()
     mps = get_mps()
-    work_on([23, 11], mps)
+    work_on([22, 24], mps)

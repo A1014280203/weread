@@ -30,8 +30,8 @@ class Book(Base):
 
     __tablename__ = "book"
 
-    bid = Column(Integer(), autoincrement=True, index=True, unique=True)
-    bookId = Column(String(128), primary_key=True)
+    bid = Column(Integer(), primary_key=True)
+    bookId = Column(String(128))
     share_url = Column(String(256))
     state = Column(Integer(), default=0)
     last_update = Column(Integer(), default=0)
@@ -76,6 +76,7 @@ class DBC(object):
         try:
             self.__s.commit()
         except Exception as e:
+            self.__s.rollback()
             return False
         return True
 
