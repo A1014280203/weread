@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, create_engine, TIMESTAMP, Integer
+from sqlalchemy import Column, String, create_engine, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -13,9 +13,9 @@ class Post(Base):
     __tablename__ = "post"
 
     # post info
-    pid = Column(Integer(), autoincrement=True)
+    pid = Column(Integer(), autoincrement=True, index=True, unique=True)
     originalId = Column(String(128), primary_key=True)
-    createTime = Column(TIMESTAMP())
+    createTime = Column(Integer())
     doc_url = Column(String(256))
     title = Column(String(128))
     content = Column(String(256))
@@ -30,11 +30,11 @@ class Book(Base):
 
     __tablename__ = "book"
 
-    bid = Column(Integer(), autoincrement=True)
+    bid = Column(Integer(), autoincrement=True, index=True, unique=True)
     bookId = Column(String(128), primary_key=True)
     share_url = Column(String(256))
     state = Column(Integer(), default=0)
-    last_update = Column(TIMESTAMP(), default=0)
+    last_update = Column(Integer(), default=0)
 
 
 class DBC(object):
@@ -67,6 +67,11 @@ class DBC(object):
         """
         pass
 
+    def update(self, cls, col, new_d):
+        if self.__s is None:
+            self.refresh_session()
+        self.__s.query(cls).filter(getattr(cls, col) == new_d[col]).update(new_d)
+
     def commit(self):
         try:
             self.__s.commit()
@@ -95,3 +100,7 @@ class DBC(object):
     def query_all_pretty(self, cls):
         rows = self.query_all(cls)
         return self.orm2dict(rows)
+
+    def update_now(self, cls, col, new_d):
+        self.update(cls, col, new_d)
+        self.commit()

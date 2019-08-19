@@ -231,8 +231,8 @@ class WeRead(object):
         check accessToken first
         :return:
         """
-        if self.token["from"] + 1.5*3600 > int(time.time()) - 120:
-            if self.sign["timestamp"] + self.sign["expires_in"] > int(time.time()) - 120:
+        if self.token["from"] + self.sign["expires_in"] > int(time.time()) - 60:
+            if self.sign["timestamp"] + self.sign["expires_in"] > int(time.time()) - 60:
                 self.get_signature()
             self.__refresh_token()
 

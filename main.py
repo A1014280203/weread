@@ -53,13 +53,14 @@ def wait_for(minutes: float):
     time.sleep(minutes*60)
 
 
-def update_by_mp(mps: [WeRead, ]):
+def update_by_mps(mps: [WeRead, ]):
     dbc = DBC()
     for mp in mps:
         mp.update_articles()
         [dbc.add(Post(**a)) for a in mp.dump_articles()]
         dbc.commit()
-        wait_for(5)
+        dbc.update_now(Book, "bookId", mp.dump_book())
+        wait_for(3)
     dbc.close_session()
 
 
@@ -67,21 +68,24 @@ def work_on(check_points: [int, ], mps):
     while True:
         print("check time", time.ctime())
         if time.localtime().tm_hour in check_points:
-            update_by_mp(mps)
+            update_by_mps(mps)
+        print("update done")
         wait_for(60)
 
 
-def update_slightly():
-    """
-    Fetch WeRead from database, update it and then discard it one after another.
-    In this way, lower memory will cost, of course, memory operations may be more frequent
-    """
-    pass
+# def update_slightly():
+#     """
+#     Fetch WeRead from database, update it and then discard it one after another.
+#     In this way, lower memory will cost, of course, memory operations may be more frequent
+#     """
+#     pass
 
 
 # todo: find a better way to func: wait_for_scanning
+# todo: replace print with logging
+# todo: update mp
 
 if __name__ == "__main__":
     authorization()
     mps = get_mps()
-    work_on([22, 11], mps)
+    work_on([23, 11], mps)
