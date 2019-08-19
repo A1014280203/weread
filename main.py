@@ -83,7 +83,6 @@ def work_on(check_points: [int, ], mps):
 
 # todo: find a better way to func: wait_for_scanning
 # todo: replace print with logging
-# todo: update mp
 
 if __name__ == "__main__":
     authorization()
