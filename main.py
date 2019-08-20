@@ -57,10 +57,13 @@ def update_by_mps(mps: [WeRead, ]):
     dbc = DBC()
     WeRead.refresh_login()
     for mp in mps:
+        print("update posts of book:", mp.bid)
         mp.update_articles()
         [dbc.add(Post(**a)) for a in mp.dump_articles()]
         dbc.commit()
+        print("update book:", mp.bid)
         dbc.update_now(Book, "bid", mp.dump_book())
+        dbc.commit()
         wait_for(3)
     dbc.close_session()
 
