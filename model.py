@@ -71,12 +71,9 @@ class DBC(object):
         if self.__s is None:
             self.refresh_session()
         self.__s.query(cls).filter(getattr(cls, col) == new_d[col]).update(new_d)
-        self.commit()
 
     def query_all(self, cls):
-        rows = self.__s.query(cls).all()
-        self.commit()
-        return rows
+        return self.__s.query(cls).all()
 
     def commit(self):
         try:
@@ -85,8 +82,6 @@ class DBC(object):
             self.__s.rollback()
             return False
         return True
-
-
 
     @staticmethod
     def orm2dict(rows: list):
@@ -109,4 +104,3 @@ class DBC(object):
 
     def update_now(self, cls, col, new_d):
         self.update(cls, col, new_d)
-        self.commit()
