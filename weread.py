@@ -265,7 +265,6 @@ class WeRead(object):
         return resp.json()["reviewId"]
 
     def dump_articles(self) -> [dict, ]:
-        print(self.articles)
         reviews = self.articles["reviews"]
         _posts = list()
         for r in reviews:
