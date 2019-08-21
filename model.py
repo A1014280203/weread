@@ -104,3 +104,5 @@ class DBC(object):
 
     def update_now(self, cls, col, new_d):
         self.update(cls, col, new_d)
+
+# todo: ALTER TABLE tablename ORDER BY columnname ASC;
