@@ -70,10 +70,10 @@ def update_by_mps(mps: [WeRead, ]):
 
 def work_on(check_points: [int, ], mps):
     while True:
-        print("check time", time.ctime())
+        print("check time", time.ctime(), flush=True)
         if time.localtime().tm_hour in check_points:
             update_by_mps(mps)
-        print("update done")
+        print("update done", flush=True)
         wait_for(60)
 
 
@@ -91,4 +91,4 @@ def work_on(check_points: [int, ], mps):
 if __name__ == "__main__":
     authorization()
     mps = get_mps()
-    work_on([22, 24], mps)
+    work_on([22, 23, 10, 13, 19], mps)
