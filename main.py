@@ -1,8 +1,6 @@
 import os
 import time
-
 import cv2
-
 from model import Post, Book, DBC
 from weread import WeRead
 

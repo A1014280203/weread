@@ -1,7 +1,6 @@
 import base64
 import json
 import time
-
 import requests
 
 
@@ -172,7 +171,7 @@ class WeRead(object):
         self.book_id = bookId
         self.share_url = share_url
         self.success = self.__is_article_available()
-        print(f"{bid}-{bookId}: {share_url} init")
+        print(f"{bid}-{bookId}: {share_url} init {self.success}, last update {self.last_update}")
 
     @property
     def review_id(self):
@@ -220,6 +219,7 @@ class WeRead(object):
         }
         resp = requests.get(self.ARTICLE_URL, params, headers=headers)
         self.articles = resp.json()
+        print(f"{self.bid}-{self.book_id}: get_articles() ->", self.articles)
         return self.articles
 
     def __is_article_available(self):
@@ -244,6 +244,7 @@ class WeRead(object):
         """
         review_id = self.__get_review_id()
         book_id = "_".join(review_id.split("_")[:-1])
+        print(f"{self.bid}-{self.book_id}: __get_book_id() ->", book_id)
         self.book_id = book_id
         return book_id
 
@@ -262,9 +263,12 @@ class WeRead(object):
                 "url": self.share_url
                 }
         resp = requests.post(self.REVIEWID_URL, json=data, headers=headers)
+        print(f"{self.bid}-{self.book_id}: __get_review_id() ->", resp.json())
         return resp.json()["reviewId"]
 
     def dump_articles(self) -> [dict, ]:
+        if "reviews" not in self.articles:
+            return []
         reviews = self.articles["reviews"]
         _posts = list()
         for r in reviews:
