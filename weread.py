@@ -58,6 +58,7 @@ class WeRead(object):
         cls.sign["signature"] = resp.json()["signature"]
         cls.sign["timestamp"] = resp.json()["timeStamp"]
         cls.sign["expires_in"] = resp.json()["expires_in"]
+        print(f"WeRead: get_signature()")
 
     @classmethod
     def get_uuid_and_qrcode(cls):
@@ -132,6 +133,7 @@ class WeRead(object):
         cls.token["accessToken"] = resp.json()["accessToken"]
         cls.token["from"] = int(time.time())
         cls.token["skey"] = resp.json()["skey"]
+        print(f"WeRead: __refresh_token()")
 
     @classmethod
     def refresh_login(cls):
@@ -142,9 +144,10 @@ class WeRead(object):
         if cls.sign["timestamp"] + cls.sign["expires_in"] > int(time.time()) - 60:
             cls.get_signature()
         cls.__refresh_token()
+        cls.dump()
 
     @classmethod
-    def save(cls, path="./WeRead.json"):
+    def dump(cls, path="./WeRead.json"):
         data = {
             "sign": cls.sign,
             "uuid": cls.uuid,

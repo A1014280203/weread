@@ -24,7 +24,7 @@ def authorization():
         wait_for_scanning_cmd(WeRead.qrcode_path)
         WeRead.get_wxcode()
         WeRead.get_token()
-        WeRead.save()
+        WeRead.dump()
 
 
 def wait_for_scanning_gui(filename):
