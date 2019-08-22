@@ -89,4 +89,4 @@ def work_on(check_points: [int, ], mps):
 if __name__ == "__main__":
     authorization()
     mps = get_mps()
-    work_on([22, 23, 10, 13, 19], mps)
+    work_on([14, 15, 16], mps)
