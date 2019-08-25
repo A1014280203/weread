@@ -1,8 +1,8 @@
 import os
 import time
-import cv2
 from model import Post, Book, DBC
 from weread import WeRead
+import random
 
 
 # 授权完成
@@ -17,34 +17,15 @@ from weread import WeRead
 
 def authorization():
     if os.path.exists("./WeRead.json"):
-        WeRead.load()
+        WeRead.load_auth()
     else:
-        WeRead.get_signature()
-        WeRead.get_uuid_and_qrcode()
-        wait_for_scanning_cmd(WeRead.qrcode_path)
-        WeRead.get_wxcode()
-        WeRead.get_token()
-        WeRead.dump()
-
-
-def wait_for_scanning_gui(filename):
-    img = cv2.imread(filename)
-    cv2.imshow("QR", img)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
-
-
-def wait_for_scanning_cmd(filename):
-    input(f"Please quickly: {filename}")
+        WeRead.authorize()
+        WeRead.dump_auth()
 
 
 def get_mps():
     books = DBC().query_all_pretty(Book)
-    mps = list()
-    for book in books:
-        mp = WeRead(**book)
-        mps.append(mp)
-    return mps
+    return [WeRead(**book) for book in books]
 
 
 def wait_for(minutes: float):
@@ -55,14 +36,18 @@ def update_by_mps(mps: [WeRead, ]):
     dbc = DBC()
     WeRead.refresh_login()
     for mp in mps:
-        print("update posts of book:", mp.bid)
+        print("main: update posts of book:", mp.bid)
         mp.update_articles()
-        [dbc.add(Post(**a)) for a in mp.dump_articles()]
+        for a in mp.dump_articles():
+            if a["title"] == a["content"]:
+                a["title"] = a["title"][:35]
+            dbc.add(Post(**a))
         dbc.commit()
-        print("update book:", mp.bid)
-        dbc.update_now(Book, "bid", mp.dump_book())
+        print("main: update book:", mp.bid)
+        dbc.update(Book, "bid", mp.dump_book())
         dbc.commit()
         wait_for(3)
+    WeRead.dump_auth()
     dbc.close_session()
 
 
@@ -70,21 +55,10 @@ def work_on(check_points: [int, ], mps):
     while True:
         print("check time", time.ctime(), flush=True)
         if time.localtime().tm_hour in check_points:
-            update_by_mps(mps)
+            update_by_mps(random.shuffle(mps))
         print("update done", flush=True)
         wait_for(60)
 
-
-# def update_slightly():
-#     """
-#     Fetch WeRead from database, update it and then discard it one after another.
-#     In this way, lower memory will cost, of course, memory operations may be more frequent
-#     """
-#     pass
-
-
-# todo: find a better way to func: wait_for_scanning
-# todo: replace print with logging
 
 if __name__ == "__main__":
     authorization()

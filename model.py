@@ -76,6 +76,10 @@ class DBC(object):
         return self.__s.query(cls).all()
 
     def commit(self):
+        """
+        documented as bad form
+        :return:
+        """
         try:
             self.__s.commit()
         except Exception as e:
@@ -101,8 +105,3 @@ class DBC(object):
     def query_all_pretty(self, cls):
         rows = self.query_all(cls)
         return self.orm2dict(rows)
-
-    def update_now(self, cls, col, new_d):
-        self.update(cls, col, new_d)
-
-# todo: ALTER TABLE tablename ORDER BY columnname ASC;
