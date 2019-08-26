@@ -55,7 +55,8 @@ def work_on(check_points: [int, ], mps):
     while True:
         print("check time", time.ctime(), flush=True)
         if time.localtime().tm_hour in check_points:
-            update_by_mps(random.shuffle(mps))
+            random.shuffle(mps)
+            update_by_mps(mps)
         print("update done", flush=True)
         wait_for(60)
 
