@@ -51,10 +51,11 @@ def update_by_mps(mps: [WeRead, ]):
     dbc.close_session()
 
 
-def work_on(check_points: [int, ], mps):
+def work_on(check_points: [int, ]):
     while True:
         print("check time", time.ctime(), flush=True)
         if time.localtime().tm_hour in check_points:
+            mps = get_mps()
             random.shuffle(mps)
             update_by_mps(mps)
         print("update done", flush=True)
@@ -63,5 +64,5 @@ def work_on(check_points: [int, ], mps):
 
 if __name__ == "__main__":
     authorization()
-    mps = get_mps()
-    work_on([i for i in range(24)], mps)
+
+    work_on([i for i in range(24)])
