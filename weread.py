@@ -282,6 +282,7 @@ class WeRead(object):
         self.last_update = last_update
         self.book_id = bookId
         self.share_url = share_url
+        self.success = True
         if not last_update:
             self.success = self.__is_article_available()
         print(f"{bid}-{bookId}: {share_url} init {self.success}, last update {self.last_update}")
