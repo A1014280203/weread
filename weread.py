@@ -185,11 +185,11 @@ class WeRead(object):
         resp = requests.post(cls.REFRESH_TOKEN_URL, json=data, headers=cls.weread_headers)
         cls.token["accessToken"] = resp.json()["accessToken"]
         cls.token["from"] = int(time.time())
-        try:
-            cls.token["skey"] = resp.json()["skey"]
-        except KeyError as e:
-            print(resp.json())
-            raise e
+        # try:
+        #     cls.token["skey"] = resp.json()["skey"]
+        # except KeyError as e:
+        #     # {'errcode': -2013, 'errmsg': '微信登录授权已过期，继续购买需跳转到微信重新登录', 'vid': 1731234, 'accessToken': 'AenOJb0n', 'alertType': 0}
+        #     raise e
 
     @classmethod
     def authorize(cls, cmd=True):
