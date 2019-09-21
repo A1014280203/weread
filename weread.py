@@ -185,7 +185,11 @@ class WeRead(object):
         resp = requests.post(cls.REFRESH_TOKEN_URL, json=data, headers=cls.weread_headers)
         cls.token["accessToken"] = resp.json()["accessToken"]
         cls.token["from"] = int(time.time())
-        cls.token["skey"] = resp.json()["skey"]
+        try:
+            cls.token["skey"] = resp.json()["skey"]
+        except KeyError as e:
+            print(resp.json())
+            raise e
 
     @classmethod
     def authorize(cls, cmd=True):
@@ -278,7 +282,8 @@ class WeRead(object):
         self.last_update = last_update
         self.book_id = bookId
         self.share_url = share_url
-        self.success = self.__is_article_available()
+        if not last_update:
+            self.success = self.__is_article_available()
         print(f"{bid}-{bookId}: {share_url} init {self.success}, last update {self.last_update}")
 
     def update_articles(self):
