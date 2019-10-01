@@ -46,7 +46,7 @@ def update_by_mps(mps: [WeRead, ]):
         print("main: update book:", mp.bid)
         dbc.update(Book, "bid", mp.dump_book())
         dbc.commit()
-        wait_for(3)
+        wait_for(random.randint(3, 10))
     WeRead.dump_auth()
     dbc.close_session()
 
@@ -65,4 +65,4 @@ def work_on(check_points: [int, ]):
 if __name__ == "__main__":
     authorization()
 
-    work_on([i for i in range(24)])
+    work_on([i for i in range(0, 24, 2)])
