@@ -41,15 +41,15 @@ class WeRead(object):
     }
 
     nonceStr = "weread"
-    appid = "wxab9b71ad2b90ff34"
-    deviceId = "3337192264877969242486422277"
-    mailDeviceId = "3577139267462447713926746244"
+    appid = "appid"
+    deviceId = "deviceId"
+    mailDeviceId = "mailDeviceId"
     scope = "snsapi_userinfo,snsapi_timeline,snsapi_friend"
     qrcode_path = "image's filename"
     sign = {"signature": "", "timestamp": 0, "expires_in": 0}
     uuid = ""
     wx_code = "exchange for token"
-    token = {"vid": 1731234, "accessToken": "", "refreshToken": "", "skey": "", "openId": "",
+    token = {"vid": "vid", "accessToken": "", "refreshToken": "", "skey": "", "openId": "",
              "user": {"name": "", "avatar": ""}, "firstLogin": 0, "userAgreement": 1, "from": "int, timestamp of token"}
 
     @classmethod
