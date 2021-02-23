@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 
 Base = declarative_base()
-engine = create_engine("mysql+pymysql://root:AbLvx5gOcUw02BG@localhost:3306/weread?charset=utf8")
+engine = create_engine("mysql+pymysql://user:password@ip:port/weread?charset=utf8")
 DBSession = sessionmaker(bind=engine)
 
 
